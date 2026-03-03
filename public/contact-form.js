@@ -18,9 +18,9 @@
         return res.json();
       })
       .then(function (user) {
-        const container = document.getElementById("pipedrive-user");
-        const nameEl = document.getElementById("pipedrive-name");
-        const avatarEl = document.getElementById("pipedrive-avatar");
+        const container = document.getElementById("contact-avatar-wrapper");
+        const nameEl = document.getElementById("contact-person-name");
+        const avatarEl = document.getElementById("contact-avatar");
         const calendarEl = document.getElementById("calendar-link");
 
         if (nameEl) nameEl.textContent = user.name;
@@ -40,7 +40,7 @@
       });
   }
 
-  function validateForm(form) {
+  function validateForm() {
     let hasError = false;
 
     const textFields = [
@@ -89,7 +89,7 @@
       e.preventDefault();
       e.stopPropagation();
 
-      if (!validateForm(form)) return;
+      if (!validateForm()) return;
 
       const formData = new FormData(form);
       const data = {
