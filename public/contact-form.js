@@ -31,9 +31,9 @@
         if (hiddenInput) hiddenInput.value = String(user.id);
         if (calendarEl && user.calendar_link) {
           calendarEl.href = user.calendar_link;
-          calendarEl.style.display = "";
+          calendarEl.style.opacity = "1";
         }
-        if (container) container.style.display = "";
+        if (container) container.style.opacity = "1";
       })
       .catch(function (err) {
         console.error("Pipedrive user load error:", err);
