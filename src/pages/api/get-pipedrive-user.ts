@@ -2,8 +2,6 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import { getCorsHeaders } from "@/lib/cors";
 import { fetchUser } from "@/lib/pipedrive";
 
-export const runtime = "edge";
-
 const CALENDAR_LINKS: Record<string, string> = {
   "24022103": "https://calendar.app.google/UKzornFSVfqTjpjH6",
   "17062690": "https://calendar.app.google/fF41H84PgsiTZ2Jm8",

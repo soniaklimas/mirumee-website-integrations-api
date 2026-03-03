@@ -79,7 +79,7 @@ async function getAccessToken(clientEmail: string, privateKey: string): Promise<
     throw new Error(`Failed to get Google access token: ${text}`);
   }
 
-  const data = await response.json();
+  const data: { access_token: string } = await response.json();
   return data.access_token;
 }
 

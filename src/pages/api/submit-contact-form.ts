@@ -4,8 +4,6 @@ import { getCorsHeaders } from "@/lib/cors";
 import { createPerson, createDeal, createNote } from "@/lib/pipedrive";
 import { appendContactToSheet } from "@/lib/google-sheets";
 
-export const runtime = "edge";
-
 const contactFormSchema = z.object({
   name: z.string().min(1),
   email: z.string().email(),

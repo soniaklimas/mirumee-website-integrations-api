@@ -1,3 +1,13 @@
+interface PipedriveResponse<T = Record<string, unknown>> {
+  success: boolean;
+  data: T;
+}
+
+interface PipedriveEntity {
+  id: number;
+  [key: string]: unknown;
+}
+
 const PIPEDRIVE_BASE = "https://api.pipedrive.com/v1";
 
 function getApiToken(): string {
@@ -33,7 +43,7 @@ export async function createPerson({ name, email, phone }: CreatePersonParams) {
     }),
   });
 
-  const json = await response.json();
+  const json: PipedriveResponse<PipedriveEntity> = await response.json();
   if (!response.ok) throw new Error(`Pipedrive createPerson failed: ${JSON.stringify(json)}`);
   return json.data;
 }
@@ -58,7 +68,7 @@ export async function createDeal({ name, email, message, userId, personId }: Cre
     }),
   });
 
-  const json = await response.json();
+  const json: PipedriveResponse<PipedriveEntity> = await response.json();
   if (!response.ok) throw new Error(`Pipedrive createDeal failed: ${JSON.stringify(json)}`);
   return json.data;
 }
@@ -82,7 +92,7 @@ export async function createNote({ message, dealId, personId, userId }: CreateNo
     }),
   });
 
-  const json = await response.json();
+  const json: PipedriveResponse<PipedriveEntity> = await response.json();
   if (!response.ok) throw new Error(`Pipedrive createNote failed: ${JSON.stringify(json)}`);
   return json.data;
 }
@@ -102,12 +112,12 @@ export async function fetchUser(userId: string): Promise<PipedriveUserData | nul
 
     if (!response.ok) return null;
 
-    const data = await response.json();
+    const data: PipedriveResponse<PipedriveEntity> = await response.json();
     if (data.success && data.data) {
       return {
         id: data.data.id,
-        name: data.data.name,
-        icon_url: data.data.icon_url,
+        name: data.data.name as string,
+        icon_url: (data.data.icon_url as string | null),
       };
     }
   } catch (error) {
