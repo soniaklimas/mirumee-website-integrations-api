@@ -40,46 +40,41 @@
       });
   }
 
-  function validateForm() {
-    let hasError = false;
+  function submitFormData(form) {
+    const formData = new FormData(form);
+    const data = {
+      name: formData.get("name"),
+      email: formData.get("email"),
+      phone: formData.get("phone") || undefined,
+      message: formData.get("message"),
+      pipedriveUserId: formData.get("pipedriveUserId") || undefined,
+    };
 
-    const textFields = [
-      ["name", "name-error"],
-      ["email", "email-error"],
-      ["message", "message-error"],
-    ];
+    const submitBtn = form.querySelector("input[type='submit']");
+    if (submitBtn) submitBtn.disabled = true;
 
-    textFields.forEach(function ([inputId, errorId]) {
-      const input = document.getElementById(inputId);
-      const errorEl = document.getElementById(errorId);
-
-      if (input && input.value.trim() === "") {
-        if (errorEl) errorEl.style.opacity = "100%";
-        input.classList.add("error-field");
-        hasError = true;
-      } else if (input) {
-        if (errorEl) errorEl.style.opacity = "0%";
-        input.classList.remove("error-field");
-      }
-    });
-
-    const checkbox = document.getElementById("privacyPolicy");
-    const checkboxText = document.getElementById("checkbox-label");
-    const labelWrapper = checkboxText
-      ? checkboxText.closest(".w-checkbox")
-      : null;
-
-    if (checkbox && !checkbox.checked) {
-      hasError = true;
-      if (labelWrapper) labelWrapper.classList.add("text-error");
-    } else if (checkbox && labelWrapper) {
-      labelWrapper.classList.remove("text-error");
-    }
-
-    return !hasError;
+    fetch(API_BASE + "/submit-contact-form", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    })
+      .then(function (res) {
+        if (!res.ok) throw new Error("Submission failed");
+        const success = form.parentElement.querySelector(".w-form-done");
+        if (success) success.style.display = "block";
+        form.style.display = "none";
+        form.reset();
+      })
+      .catch(function () {
+        const fail = form.parentElement.querySelector(".w-form-fail");
+        if (fail) fail.style.display = "block";
+      })
+      .finally(function () {
+        if (submitBtn) submitBtn.disabled = false;
+      });
   }
 
-  function setupFormSubmission() {
+  function setup() {
     const form =
       document.querySelector("[data-name='Contact Form']") ||
       document.querySelector("form");
@@ -88,50 +83,17 @@
     form.addEventListener("submit", function (e) {
       e.preventDefault();
       e.stopPropagation();
-
-      if (!validateForm()) return;
-
-      const formData = new FormData(form);
-      const data = {
-        name: formData.get("name"),
-        email: formData.get("email"),
-        phone: formData.get("phone") || undefined,
-        message: formData.get("message"),
-        pipedriveUserId: formData.get("pipedriveUserId") || undefined,
-      };
-
-      const submitBtn = form.querySelector("[type='submit']");
-      if (submitBtn) submitBtn.disabled = true;
-
-      fetch(API_BASE + "/submit-contact-form", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
-      })
-        .then(function (res) {
-          if (!res.ok) throw new Error("Submission failed");
-          const success = form.parentElement.querySelector(".w-form-done");
-          if (success) success.style.display = "block";
-          form.style.display = "none";
-          form.reset();
-        })
-        .catch(function () {
-          const fail = form.parentElement.querySelector(".w-form-fail");
-          if (fail) fail.style.display = "block";
-        })
-        .finally(function () {
-          if (submitBtn) submitBtn.disabled = false;
-        });
+      submitFormData(form);
     });
   }
 
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", function () {
       loadPipedriveUser();
-      setupFormSubmission();
+      setup();
     });
   } else {
     loadPipedriveUser();
-    setupFormSubmission();
+    setup();
   }
 })();
