@@ -60,14 +60,21 @@
     })
       .then(function (res) {
         if (!res.ok) throw new Error("Submission failed");
-        const success = form.parentElement.querySelector(".w-form-done");
-        if (success) success.style.display = "block";
-        form.style.display = "none";
-        form.reset();
+        const pipedriveUserId = formData.get("pipedriveUserId");
+        const sentUrl = pipedriveUserId
+          ? "/contact-sent?to=" + pipedriveUserId
+          : "/contact-sent";
+        window.location.href = sentUrl;
       })
       .catch(function () {
-        const fail = form.parentElement.querySelector(".w-form-fail");
+        const fail = document.getElementById("form-error-wrapper");
         if (fail) fail.style.display = "block";
+        form.style.display = "none";
+        const section = document.getElementById("contact-section");
+        if (section) {
+          section.style.backgroundColor = "#181818";
+          section.style.color = "#fffff8";
+        }
       })
       .finally(function () {
         if (submitBtn) submitBtn.disabled = false;
@@ -80,9 +87,11 @@
       document.querySelector("form");
     if (!form) return;
 
+    form.setAttribute("action", "javascript:void(0)");
+
     form.addEventListener("submit", function (e) {
       e.preventDefault();
-      e.stopPropagation();
+      e.stopImmediatePropagation();
       submitFormData(form);
     });
   }
