@@ -51,7 +51,14 @@
     };
 
     const submitBtn = form.querySelector("input[type='submit']");
-    if (submitBtn) submitBtn.disabled = true;
+    if (submitBtn) {
+      submitBtn.disabled = true;
+      submitBtn.style.opacity = "0.5";
+      submitBtn.style.cursor = "not-allowed";
+    }
+
+    const errorEl = form.parentElement.querySelector(".w-form-fail");
+    if (errorEl) errorEl.style.display = "none";
 
     fetch(API_BASE + "/submit-contact-form", {
       method: "POST",
@@ -67,17 +74,14 @@
         window.location.href = sentUrl;
       })
       .catch(function () {
-        const fail = document.getElementById("form-error-wrapper");
-        if (fail) fail.style.display = "block";
-        form.style.display = "none";
-        const section = document.getElementById("contact-section");
-        if (section) {
-          section.style.backgroundColor = "#181818";
-          section.style.color = "#fffff8";
-        }
+        if (errorEl) errorEl.style.display = "block";
       })
       .finally(function () {
-        if (submitBtn) submitBtn.disabled = false;
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.style.opacity = "";
+          submitBtn.style.cursor = "";
+        }
       });
   }
 
