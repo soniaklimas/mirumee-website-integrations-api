@@ -6,6 +6,7 @@ export default function Home() {
       <ul>
         <li><code>POST /api/submit-contact-form</code></li>
         <li><code>GET /api/get-pipedrive-user?userId=123</code></li>
+        <li><code>GET /api/get-job-offers?company=kaiko</code></li>
         <li><code>GET /api/calendar?to=123</code></li>
       </ul>
     </div>

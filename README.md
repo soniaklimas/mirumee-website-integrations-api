@@ -1,5 +1,28 @@
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`webflow cloud init`](https://developers.webflow.com/webflow-cloud/intro).
 
+## Environment variables
+
+Create a `.env` (based on `.env.example`) with:
+
+```bash
+# Pipedrive
+PIPEDRIVE_X_API_TOKEN=...
+PIPEDRIVE_DEFAULT_USER_ID=...
+
+# Google Sheets (fallback for @gmail.com submissions)
+GMAIL_CONTACT_SPREADSHEET_ID=...
+GMAIL_CONTACT_SPREADSHEET_RANGE=Sheet1!A:D
+GOOGLE_SERVICE_CLIENT_EMAIL=...
+GOOGLE_SERVICE_PRIVATE_KEY_2=...
+
+# CORS
+ALLOWED_ORIGINS=https://your-site.webflow.io,https://your-domain.com
+
+# Teamtailor (for /api/get-job-offers)
+TEAMTAILOR_API_KEY=...
+TEAMTAILOR_COMPANY_CUSTOM_FIELD_API_ID=... # optional, needed for company filtering
+```
+
 ## Getting Started
 
 First, run the development server:
@@ -13,3 +36,51 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
 You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
 You can deploy your app by running [`webflow cloud deploy`](https://developers.webflow.com/webflow-cloud/environment).
+
+## API routes
+
+- `POST /api/submit-contact-form`
+- `GET /api/get-pipedrive-user?userId=123`
+- `GET /api/calendar?to=123`
+- `GET /api/get-job-offers?company=kaiko`
+
+`GET /api/get-job-offers` returns:
+
+```json
+{
+  "count": 0,
+  "hasOffers": false,
+  "offers": []
+}
+```
+
+When no `company` query is provided, it returns offers where `company` is `null` (same behavior as the current Mirumee listing).
+
+## Webflow script for job offers
+
+This repo now includes `public/job-offers.js` to render offers in Webflow only when offers are available.
+
+Expected markup:
+
+```html
+<div data-job-offers-wrapper data-company="kaiko" style="display:none;">
+  <template data-job-offer-template>
+    <a data-job-offer-item data-job-link href="#">
+      <span data-job-position></span>
+      <span data-job-title></span>
+      <span data-job-salary></span>
+    </a>
+  </template>
+  <div data-job-offers-list></div>
+</div>
+
+<div data-job-offers-empty style="display:none;">
+  No open roles right now.
+</div>
+```
+
+Then include:
+
+```html
+<script src="https://<your-cloud-domain>/job-offers.js"></script>
+```
