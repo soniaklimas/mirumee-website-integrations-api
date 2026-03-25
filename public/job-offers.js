@@ -10,33 +10,31 @@
 
   function initJobOffers() {
   const wrapper = document.querySelector("[data-job-offers-wrapper]");
-  const emptyState = document.querySelector("[data-job-offers-empty]");
   const template = document.querySelector("[data-job-offer-template]");
   const list = document.querySelector("[data-job-offers-list]");
+  const findOfferEl =
+    document.querySelector("[data-find-offer-section]") ||
+    document.querySelector(".find_offer_wrapper") ||
+    null;
 
-  if (!wrapper || !list || !template) {
-    console.warn(
-      "[job-offers] Missing required elements (add Custom attributes on the careers page):",
-      {
-        "data-job-offers-wrapper": Boolean(wrapper),
-        "data-job-offers-list": Boolean(list),
-        "data-job-offer-template": Boolean(template),
-      },
-    );
+  if (!list || !template) {
+    console.warn("[job-offers] Missing required elements:", {
+      "data-job-offers-list": Boolean(list),
+      "data-job-offer-template": Boolean(template),
+    });
     return;
   }
 
-  const company = wrapper.getAttribute("data-company");
+  const company = wrapper ? wrapper.getAttribute("data-company") : "";
   const endpoint =
     API_BASE +
     "/get-job-offers" +
     (company ? "?company=" + encodeURIComponent(company) : "");
 
   const mockJobs =
-    wrapper.hasAttribute("data-mock-job-offers") ||
+    (wrapper && wrapper.hasAttribute("data-mock-job-offers")) ||
     new URLSearchParams(window.location.search).get("mockJobs") === "1";
-  // Helpful during Webflow setup.
-  console.debug("[job-offers] init", { mockJobs, company: wrapper.getAttribute("data-company") });
+  const DEBUG = new URLSearchParams(window.location.search).get("debugJobOffers") === "1";
 
   /** Mock list: Engineering roles, PLN with spaced thousands (for layout / tabs testing) */
   function getMockPayload() {
@@ -76,11 +74,6 @@
     };
   }
 
-  function setVisible(el, visible) {
-    if (!el) return;
-    el.style.display = visible ? "" : "none";
-  }
-
   function formatNumberWithSpaces(n) {
     return String(Math.round(Number(n))).replace(/\B(?=(\d{3})+(?!\d))/g, " ");
   }
@@ -112,21 +105,8 @@
   }
 
   function cloneOfferRowFromTemplate(tpl) {
-    if (tpl.tagName === "TEMPLATE") {
-      const frag = tpl.content.cloneNode(true);
-      return (
-        frag.querySelector("[data-job-offer-item]") || frag.firstElementChild
-      );
-    }
-    if (tpl.hasAttribute && tpl.hasAttribute("data-job-offer-template")) {
-      return tpl.cloneNode(true);
-    }
-    const clone = tpl.cloneNode(true);
-    return (
-      clone.querySelector("[data-job-offer-item]") ||
-      clone.firstElementChild ||
-      clone
-    );
+    // For your Webflow setup the template is the Link Block row itself.
+    return tpl.cloneNode(true);
   }
 
   function renderOffer(offer, index) {
@@ -135,9 +115,16 @@
       return;
     }
 
+    // If Webflow hides elements via conditional classes, remove it from the clone.
+    root.classList.remove("w-condition-invisible");
+    root.querySelectorAll(".w-condition-invisible").forEach((n) => {
+      n.classList.remove("w-condition-invisible");
+    });
+
     root.removeAttribute("data-job-offer-template");
-    // If the template is set to `display: none` in Webflow, the clone can inherit the
-    // hidden display through classes/styles. Force visible layout for the clone.
+    // Webflow "Hidden" often applies inline `style="display:none"`. Clear it from the clone.
+    root.removeAttribute("style");
+    // Force visible layout for the clone.
     root.style.setProperty("display", "block", "important");
     root.style.setProperty("visibility", "visible", "important");
     root.style.setProperty("opacity", "1", "important");
@@ -149,127 +136,42 @@
       root.setAttribute("data-job-department-id", deptId);
     }
 
-    const titleEl = root.querySelector("[data-job-title]");
-    const salaryEl = root.querySelector("[data-job-salary]");
-    const positionEl = root.querySelector("[data-job-position]");
-    const locationEl = root.querySelector("[data-job-location]");
-    const remoteEl = root.querySelector("[data-job-remote]");
-    const linkEl = root.matches("[data-job-link]")
-      ? root
-      : root.querySelector("[data-job-link]");
+    const positionEl =
+      root.querySelector("[data-job-position]") || root.querySelector(".index_number");
+    const titleEl =
+      root.querySelector("[data-job-title]") || root.querySelector(".job_offer_header");
+    const salaryEl =
+      root.querySelector("[data-job-salary]") || root.querySelector(".offer_salary");
+
+    const detailEls = root.querySelectorAll(".offer_detail");
+    const locationEl =
+      root.querySelector("[data-job-location]") || detailEls[0] || null;
+    const remoteEl =
+      root.querySelector("[data-job-remote]") || detailEls[1] || null;
 
     if (titleEl) titleEl.textContent = offer.title || "";
     if (salaryEl) salaryEl.textContent = formatSalary(offer);
     if (positionEl) {
       positionEl.textContent = String(index + 1).padStart(2, "0");
     }
-    if (locationEl) {
-      locationEl.textContent = offer.locationLabel || "";
-    }
+    if (locationEl) locationEl.textContent = offer.locationLabel || "";
     if (remoteEl) {
-      remoteEl.textContent =
-        offer.remoteLabel || remoteStatusLabel(offer.remoteStatus) || "";
+      remoteEl.textContent = offer.remoteLabel || remoteStatusLabel(offer.remoteStatus) || "";
     }
-    if (linkEl && offer.url) {
-      linkEl.setAttribute("href", offer.url);
+
+    if (offer.url) {
+      if (root.tagName === "A") {
+        root.setAttribute("href", offer.url);
+      } else {
+        const linkEl =
+          root.querySelector("[data-job-link]") || root.querySelector("a[href]");
+        if (linkEl) linkEl.setAttribute("href", offer.url);
+      }
     }
 
     root.setAttribute("data-job-clone", "");
     list.appendChild(root);
-  }
-
-  function clearDynamicTabs(tabsHost, tabTemplate) {
-    tabsHost.querySelectorAll("[data-job-tab-dynamic]").forEach((n) => {
-      n.remove();
-    });
-    if (tabTemplate) {
-      tabTemplate.style.display = "none";
-    }
-  }
-
-  function setTabActive(activeBtn, allTabButtons) {
-    allTabButtons.forEach((btn) => {
-      btn.setAttribute("aria-pressed", btn === activeBtn ? "true" : "false");
-      btn.classList.toggle("is-active", btn === activeBtn);
-    });
-  }
-
-  function setupDepartmentTabs(offers) {
-    const tabsHost = document.querySelector("[data-job-tabs]");
-    const tabAll = document.querySelector("[data-job-tab-all]");
-    const tabTemplate = document.querySelector("[data-job-tab-template]");
-    if (!tabsHost || !tabAll || !tabTemplate) {
-      return;
-    }
-
-    clearDynamicTabs(tabsHost, tabTemplate);
-
-    const seen = new Map();
-    offers.forEach((o) => {
-      const id = o.departmentId || "";
-      const name = o.departmentName || (id ? id : "");
-      if (!id && !name) return;
-      const key = id || name;
-      if (!seen.has(key)) {
-        seen.set(key, { id: id, name: name || id });
-      }
-    });
-
-    const departments = Array.from(seen.values()).filter((d) => {
-      return d.id || d.name;
-    });
-    if (departments.length <= 1 && !departments[0]) {
-      return;
-    }
-
-    const tabButtons = [tabAll];
-    departments.forEach((dep) => {
-      const btn = tabTemplate.cloneNode(true);
-      btn.removeAttribute("id");
-      btn.setAttribute("data-job-tab-dynamic", "");
-      btn.setAttribute("data-department-id", dep.id);
-      btn.style.display = "";
-      btn.textContent = dep.name || "Department";
-      tabTemplate.parentNode.insertBefore(btn, tabTemplate.nextSibling);
-      tabButtons.push(btn);
-    });
-
-    function filterRows(departmentId) {
-      const rows = list.querySelectorAll("[data-job-department-id]");
-      rows.forEach((row) => {
-        const rid = row.getAttribute("data-job-department-id") || "";
-        const show = !departmentId || rid === departmentId;
-        row.style.display = show ? "" : "none";
-      });
-    }
-
-    tabAll.addEventListener("click", () => {
-      setTabActive(tabAll, tabButtons);
-      filterRows("");
-    });
-
-    tabButtons.slice(1).forEach((btn) => {
-      btn.addEventListener("click", () => {
-        setTabActive(btn, tabButtons);
-        filterRows(btn.getAttribute("data-department-id") || "");
-      });
-    });
-
-    setTabActive(tabAll, tabButtons);
-    filterRows("");
-  }
-
-  function showListForOffers(hasOffers) {
-    const displayMode = list.getAttribute("data-list-display") || "flex";
-    if (hasOffers) {
-      list.style.display = displayMode;
-      if (displayMode === "flex") {
-        // Job rows should stack vertically.
-        list.style.flexDirection = "column";
-      }
-    } else {
-      list.style.display = "none";
-    }
+    if (DEBUG && mockJobs) console.debug("[job-offers] rendered", { index, title: offer.title });
   }
 
   function runWithPayload(payload) {
@@ -279,28 +181,23 @@
       n.remove();
     });
 
-    const tabsHost = document.querySelector("[data-job-tabs]");
-    const tabTemplate = document.querySelector("[data-job-tab-template]");
-    if (tabsHost && tabTemplate) {
-      clearDynamicTabs(tabsHost, tabTemplate);
-    }
+    if (DEBUG) console.debug("[job-offers] payload", { offersCount: offers.length });
 
     if (!offers.length) {
-      setVisible(wrapper, true);
-      setVisible(emptyState, !!emptyState);
-      showListForOffers(false);
+      list.style.display = "none";
+      if (findOfferEl) findOfferEl.style.display = "";
       return;
     }
 
-    setVisible(wrapper, true);
-    setVisible(emptyState, false);
-    showListForOffers(true);
+    if (findOfferEl) findOfferEl.style.display = "none";
 
-    offers.forEach((offer, i) => {
-      renderOffer(offer, i);
-    });
+    const displayMode = list.getAttribute("data-list-display") || "flex";
+    list.style.display = displayMode;
+    if (displayMode === "flex") {
+      list.style.flexDirection = "column";
+    }
 
-    setupDepartmentTabs(offers);
+    offers.forEach((offer, i) => renderOffer(offer, i));
   }
 
   if (mockJobs) {
@@ -327,9 +224,8 @@
     .then(runWithPayload)
     .catch((error) => {
       console.error("job-offers load error:", error.message || error);
-      setVisible(wrapper, true);
-      setVisible(emptyState, !!emptyState);
-      showListForOffers(false);
+      list.style.display = "none";
+      if (findOfferEl) findOfferEl.style.display = "";
     });
   }
 
