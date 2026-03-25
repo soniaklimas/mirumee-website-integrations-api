@@ -174,6 +174,13 @@
     if (DEBUG && mockJobs) console.debug("[job-offers] rendered", { index, title: offer.title });
   }
 
+  function setFindOfferIndex(nextIndex) {
+    if (!findOfferEl) return;
+    const indexEl = findOfferEl.querySelector(".index_number");
+    if (!indexEl) return;
+    indexEl.textContent = String(nextIndex).padStart(2, "0");
+  }
+
   function runWithPayload(payload) {
     const offers = Array.isArray(payload.offers) ? payload.offers : [];
 
@@ -185,11 +192,9 @@
 
     if (!offers.length) {
       list.style.display = "none";
-      if (findOfferEl) findOfferEl.style.display = "";
+      setFindOfferIndex(1);
       return;
     }
-
-    if (findOfferEl) findOfferEl.style.display = "none";
 
     const displayMode = list.getAttribute("data-list-display") || "flex";
     list.style.display = displayMode;
@@ -198,6 +203,7 @@
     }
 
     offers.forEach((offer, i) => renderOffer(offer, i));
+    setFindOfferIndex(offers.length + 1);
   }
 
   if (mockJobs) {
@@ -225,7 +231,6 @@
     .catch((error) => {
       console.error("job-offers load error:", error.message || error);
       list.style.display = "none";
-      if (findOfferEl) findOfferEl.style.display = "";
     });
   }
 
