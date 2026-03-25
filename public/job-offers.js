@@ -255,6 +255,10 @@
     const displayMode = list.getAttribute("data-list-display") || "flex";
     if (hasOffers) {
       list.style.display = displayMode;
+      if (displayMode === "flex") {
+        // Job rows should stack vertically.
+        list.style.flexDirection = "column";
+      }
     } else {
       list.style.display = "none";
     }
