@@ -74,7 +74,9 @@ export async function fetchJobOffers(): Promise<JobOffer[]> {
   const companyFieldId = process.env.TEAMTAILOR_COMPANY_CUSTOM_FIELD_API_ID;
 
   const jobsRequest = fetch(
-    `${TEAMTAILOR_BASE_URL}/jobs?include=department,locations,custom-field-values&filter[status]=open`,
+    // Teamtailor doesn't accept `filter[status]=open` (400/107). In the existing Mirumee implementation
+    // they don't filter by status at the API level; the default result set maps to the job listing.
+    `${TEAMTAILOR_BASE_URL}/jobs?include=department,locations,custom-field-values`,
     { headers: getTeamtailorHeaders() },
   );
 

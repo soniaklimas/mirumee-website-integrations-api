@@ -56,6 +56,37 @@ You can deploy your app by running [`webflow cloud deploy`](https://developers.w
 
 When no `company` query is provided, it returns offers where `company` is `null` (same behavior as the current Mirumee listing).
 
+## Quick test (UI mock data)
+
+To verify the Webflow UI wiring without calling Teamtailor, load the careers page with:
+
+- `?mockJobs=1`
+
+Example:
+
+```text
+https://<your-webflow-domain>/careers?mockJobs=1
+```
+
+When `mockJobs=1` is present, `public/job-offers.js` renders mock offers (2 roles) so you can confirm:
+
+- tabs appear
+- job rows clone/render correctly
+- “no offers” state behavior
+
+## Quick test (real offers + company filter)
+
+When testing the real API response, you can filter jobs by company:
+
+```text
+GET https://<your-cloud-domain>/app/api/get-job-offers?company=kaiko
+```
+
+Notes:
+
+- `company` matches the optional Teamtailor custom field value (`TEAMTAILOR_COMPANY_CUSTOM_FIELD_API_ID`)
+- if `company` is omitted, the API returns only offers where `company` is `null`
+
 ## Webflow script for job offers
 
 This repo now includes `public/job-offers.js` to render offers in Webflow only when offers are available.

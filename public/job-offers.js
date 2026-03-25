@@ -252,13 +252,9 @@
   }
 
   function showListForOffers(hasOffers) {
-    const displayMode = list.getAttribute("data-list-display");
+    const displayMode = list.getAttribute("data-list-display") || "flex";
     if (hasOffers) {
-      if (displayMode) {
-        list.style.display = displayMode;
-      } else {
-        list.style.removeProperty("display");
-      }
+      list.style.display = displayMode;
     } else {
       list.style.display = "none";
     }
