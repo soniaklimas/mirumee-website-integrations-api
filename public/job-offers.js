@@ -203,7 +203,7 @@
       buttons.forEach((b) => b.classList.remove("is-active"));
       tabAll.classList.add("is-active");
       list.querySelectorAll("[data-job-department-id]").forEach((row) => {
-        row.style.display = "";
+        row.style.setProperty("display", "block", "important");
       });
     };
 
@@ -225,7 +225,11 @@
 
         list.querySelectorAll("[data-job-department-id]").forEach((row) => {
           const rid = row.getAttribute("data-job-department-id") || "";
-          row.style.display = rid === dep.id ? "" : "none";
+          row.style.setProperty(
+            "display",
+            rid === dep.id ? "block" : "none",
+            "important",
+          );
         });
       };
 
