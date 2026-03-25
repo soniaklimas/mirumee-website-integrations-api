@@ -1,12 +1,28 @@
+/**
+ * Job offers UI for Webflow.
+ *
+ * Script URL: must match your Next.js basePath. With basePath "/app", this file is at /app/job-offers.js
+ * on the Cloud app origin. If the careers page is on webflow.io, use the full Cloud app URL for src=,
+ * not a relative /app/... path (that would request webflow.io, not the API host).
+ */
 (function () {
   const API_BASE = "/app/api";
 
+  function initJobOffers() {
   const wrapper = document.querySelector("[data-job-offers-wrapper]");
   const emptyState = document.querySelector("[data-job-offers-empty]");
   const template = document.querySelector("[data-job-offer-template]");
   const list = document.querySelector("[data-job-offers-list]");
 
   if (!wrapper || !list || !template) {
+    console.warn(
+      "[job-offers] Missing required elements (add Custom attributes on the careers page):",
+      {
+        "data-job-offers-wrapper": Boolean(wrapper),
+        "data-job-offers-list": Boolean(list),
+        "data-job-offer-template": Boolean(template),
+      },
+    );
     return;
   }
 
@@ -285,15 +301,33 @@
   }
 
   fetch(endpoint)
-    .then((res) => {
-      if (!res.ok) throw new Error("Failed to fetch job offers");
+    .then(async (res) => {
+      if (!res.ok) {
+        const errText = await res.text();
+        let detail = errText.slice(0, 500);
+        try {
+          const parsed = JSON.parse(errText);
+          detail = parsed.error || parsed.message || detail;
+        } catch {
+          /* not JSON (e.g. HTML 404 page) */
+        }
+        console.error("[job-offers] API returned error:", res.status, detail);
+        throw new Error(`get-job-offers ${res.status}: ${detail}`);
+      }
       return res.json();
     })
     .then(runWithPayload)
     .catch((error) => {
-      console.error("job-offers load error:", error);
+      console.error("job-offers load error:", error.message || error);
       setVisible(wrapper, true);
       setVisible(emptyState, !!emptyState);
       showListForOffers(false);
     });
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", initJobOffers);
+  } else {
+    initJobOffers();
+  }
 })();

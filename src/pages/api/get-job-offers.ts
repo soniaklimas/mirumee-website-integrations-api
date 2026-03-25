@@ -30,6 +30,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     });
   } catch (error) {
     console.error("get-job-offers error:", error);
-    return res.status(500).json({ error: "Internal server error" });
+    const message =
+      error instanceof Error ? error.message : error != null ? String(error) : "Unknown error";
+    // Return a safe details field to help diagnose misconfiguration (missing env, auth, etc.).
+    return res.status(500).json({ error: "Internal server error", details: message });
   }
 }

@@ -13,7 +13,8 @@ function getTeamtailorHeaders(): HeadersInit {
   return {
     Authorization: `Token token=${getTeamtailorApiKey()}`,
     "X-Api-Version": TEAMTAILOR_API_VERSION,
-    Accept: "application/json",
+    // Teamtailor API is JSON:API; it rejects plain `application/json` with HTTP 406.
+    Accept: "application/vnd.api+json",
   };
 }
 
