@@ -174,6 +174,66 @@
     if (DEBUG && mockJobs) console.debug("[job-offers] rendered", { index, title: offer.title });
   }
 
+  function setupDepartmentTabs(offers) {
+    const tabsHost = document.querySelector(".all_positions_wrapper");
+    if (!tabsHost) return;
+
+    const buttons = Array.from(tabsHost.querySelectorAll(".all_positions_button"));
+    const tabAll = buttons[0];
+    const tabTemplate = buttons[1];
+    if (!tabAll || !tabTemplate) return;
+
+    // If we've already injected tabs before, remove only the ones we injected.
+    tabsHost.querySelectorAll("[data-job-tab-dynamic]").forEach((n) => n.remove());
+
+    const departments = [];
+    const seen = new Set();
+    offers.forEach((o) => {
+      const id = o.departmentId || "";
+      const name = o.departmentName || id;
+      if (!id || seen.has(id)) return;
+      seen.add(id);
+      departments.push({ id, name });
+    });
+
+    if (!departments.length) return;
+
+    // Default: show all offers, activate All positions tab.
+    const activateAll = () => {
+      buttons.forEach((b) => b.classList.remove("is-active"));
+      tabAll.classList.add("is-active");
+      list.querySelectorAll("[data-job-department-id]").forEach((row) => {
+        row.style.display = "";
+      });
+    };
+
+    tabAll.onclick = activateAll;
+    activateAll();
+
+    // Create at least one department tab (Engineering etc.)
+    departments.forEach((dep, idx) => {
+      const btn = tabTemplate.cloneNode(true);
+      btn.setAttribute("data-job-tab-dynamic", "");
+      btn.removeAttribute("id");
+      btn.style.display = "";
+      btn.classList.remove("is-active");
+      btn.textContent = dep.name || "Department";
+
+      btn.onclick = () => {
+        buttons.forEach((b) => b.classList.remove("is-active"));
+        btn.classList.add("is-active");
+
+        list.querySelectorAll("[data-job-department-id]").forEach((row) => {
+          const rid = row.getAttribute("data-job-department-id") || "";
+          row.style.display = rid === dep.id ? "" : "none";
+        });
+      };
+
+      tabsHost.insertBefore(btn, tabAll.nextSibling);
+      // InsertBefore keeps the ordering as last inserted; that's OK for testing.
+    });
+  }
+
   function setFindOfferIndex(nextIndex) {
     if (!findOfferEl) return;
     const indexEl = findOfferEl.querySelector(".index_number");
@@ -203,6 +263,7 @@
     }
 
     offers.forEach((offer, i) => renderOffer(offer, i));
+    setupDepartmentTabs(offers);
     setFindOfferIndex(offers.length + 1);
   }
 
