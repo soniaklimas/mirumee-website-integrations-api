@@ -35,6 +35,8 @@
   const mockJobs =
     wrapper.hasAttribute("data-mock-job-offers") ||
     new URLSearchParams(window.location.search).get("mockJobs") === "1";
+  // Helpful during Webflow setup.
+  console.debug("[job-offers] init", { mockJobs, company: wrapper.getAttribute("data-company") });
 
   /** Mock list: Engineering roles, PLN with spaced thousands (for layout / tabs testing) */
   function getMockPayload() {
@@ -134,7 +136,13 @@
     }
 
     root.removeAttribute("data-job-offer-template");
-    root.style.display = "";
+    // If the template is set to `display: none` in Webflow, the clone can inherit the
+    // hidden display through classes/styles. Force visible layout for the clone.
+    root.style.setProperty("display", "block", "important");
+    root.style.setProperty("visibility", "visible", "important");
+    root.style.setProperty("opacity", "1", "important");
+    root.style.setProperty("pointer-events", "auto", "important");
+    root.style.setProperty("position", "static", "important");
 
     const deptId = offer.departmentId || "";
     if (deptId) {
